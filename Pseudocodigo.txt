@@ -1,0 +1,38 @@
+class Prenda {
+	variable tipo
+	variable precio
+	variable estado
+
+	method calcularPrecioFinal()
+		if estado es PROMOCION 
+			return precio - VALOR_A_RESTAR ?
+		if estado es LIQUIDACION
+			return precio * 0.5
+		else 
+			return precio
+}
+
+class ItemPrenda { 
+	variable prenda
+	variable cantidad
+
+	method obtenerPrecioTotal()
+		return prenda.calcularPrecioFinal() * cantidad
+}
+
+class Venta {
+	variable prendasVendidas // Lista de ItemPrenda
+	variable formaPago
+	variable cuotas
+	variable monto // Para cuando se genere la venta, guardar el monto en ese momento
+
+	method calcularMonto(){
+		if formaPago es EFECTIVO 
+			return prendasVendidas.sumar(prenda -> prenda.obtenerPrecioTotal())
+		else {
+			valorPrendas = prendasVendidas.sumar(prenda -> prenda.obtenerPrecioTotal())
+			return valorPrendas + (valorPrendas * 0.01) + (cuotas * COEFICIENTE_RECARGO)
+		} 
+
+	}
+}
