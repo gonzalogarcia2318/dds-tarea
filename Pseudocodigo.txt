@@ -1,57 +1,88 @@
+// Pseudocodigo
+
 class Prenda {
-	variable tipo
 	variable precio
 	variable estado
+	variable tipoPrenda
 
-	method calcularPrecioFinal()
-		if estado es PROMOCION 
-			return precio - VALOR_A_RESTAR ?
-		if estado es LIQUIDACION
-			return precio * 0.5
-		else 
-			return precio
+	method precio()
+		return estado.calcularPrecioFinal(precio)
 }
 
-class ItemPrenda { 
-	variable prenda
-	variable cantidad
+interface Estado {
+	method calcularPrecioFinal(precio)
+}
 
-	method obtenerPrecioTotal()
-		return prenda.calcularPrecioFinal() * cantidad
+class Nueva implements Estado{
+	method calcularPrecioFinal(precio)
+		return precio
+}
+
+class Promocion implements Estado{
+	variable valorDescuento
+
+	method calcularPrecioFinal(precio)
+		return precio - valorDescuento
+}
+
+class Liquidacion implements Estado {
+	method calcularPrecioFinal(precio)
+		return precio * 0.5
+}
+
+class ItemVenta {
+	variable cantidad
+	variable prenda
+
+	method precioTotal()
+		return cantidad * prenda.precio()
 }
 
 class Venta {
-	variable prendasVendidas // Lista de ItemPrenda
-	variable formaPago
+	variable items
+	variable fecha
+	variable medioPago
+
+	method monto()
+		return medioPago.monto(items)
+
+	method esDeFecha(unaFecha)
+		return fecha == unaFecha
+}
+
+interface MedioPago {
+	method monto(items)
+}
+
+class Efectivo implements MedioPago {
+	method monto(items)
+		return items.sum(item -> item.precioTotal())
+}
+
+class TarjetaCredito implements MedioPago{
 	variable cuotas
-	variable monto // Para cuando se genere la venta, guardar el monto en ese momento
+	variable coeficienteRecargo
 
-	method calcularMonto(){
-		if formaPago es EFECTIVO 
-			return prendasVendidas.sumar(prenda -> prenda.obtenerPrecioTotal())
-		else {
-			valorPrendas = prendasVendidas.sumar(prenda -> prenda.obtenerPrecioTotal())
-			return valorPrendas + (valorPrendas * 0.01) + (cuotas * COEFICIENTE_RECARGO)
-		} 
-
+	method monto(items){
+		valorPrendas = items.sum(item -> item.precioTotal()) 
+		return valorPrendas + (valorPrendas * 0.01) + (cuotas * coeficienteRecargo)
 	}
 }
 
+class Negocio {
+	variable ventas
 
-- Otra alternativa?
-En la clase Prenda, se podría crear otra clase que calcule los precios de acuerdo al estado.
-Es decir, que tenga 3 objetos (uno por cada estado, promoción, liquidación y nueva) y en el método
-de calcularPrecioFinal() en prenda, delegarlo directamente al objeto estado.
-
-method calcularPrecioFinal(){
-	return estado.calcularPrecio(this)	// this = prenda actual
+	method gananciasDelDia(dia)
+		return ventas.filter(venta -> venta.esDeFecha(dia))
+					 .sum(venta -> venta.monto()
 }
 
-De esa forma la prenda no tendría relación con cómo se calcula su precio según el estado, pero habría que generar 3 objetos de estado siempre. 
 
-- Comentario de la solución:
-El atributo monto en la clase Venta es para saber cuánto costo esa venta en el momento en el que se
-vendió, porque si se tiene que volver a calcular, los precios de las prendas pueden haber cambiado y
-daría un resultado que no es el que se vendió. 
-
-El VALOR_A_RESTAR y COEFICIENTE_RECARGO no me queda claro de donde se obtendrían. 
+// La parte de Ventas tambien podria tener una clase padre Venta que represente la venta en efectivo 
+// y una clase hija VentaEnTarjeta a la que se le aplique el recargo. De esa forma, no repetiriamos 
+// la logica de calcular el valor de las prendas, pero no quedaria tan claro que una venta tiene un 
+// medio de pago.
+// Seria mas facil al crear la venta porque quedaria: Venta venta = new VentaEnTarjeta()
+// Haciendolo con composicion quedaria por ejemplo: Venta venta = new Venta(new Efectivo())
+// en el constructor o en algun lado habria que pasarle cual es el medio de pago a la venta y seria
+// un objeto hijo de la interfaz MedioPago.
